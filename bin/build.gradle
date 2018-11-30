@@ -1,0 +1,23 @@
+apply plugin: 'java' 
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  compile "org.json:json:20180813"
+}
+
+jar {
+  baseName = 'pokedex'
+  version = '0.1.0'
+}
+
+apply plugin: 'application'
+mainClassName = 'pokedex.Pokedex'
+
+// If you need intellisense for vscode
+apply plugin: 'eclipse'
