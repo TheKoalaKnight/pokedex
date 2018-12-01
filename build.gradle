@@ -4,10 +4,12 @@ repositories {
   mavenCentral()
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.9
+targetCompatibility = 1.9
 
-dependencies {}
+dependencies {
+  compile "org.jsoup:jsoup:1.11.3"
+}
 
 jar {
   baseName = 'pokedex'
