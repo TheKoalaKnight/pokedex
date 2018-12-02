@@ -6,7 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class PokedexAPI {
+final public class PokedexAPI {
   static final String NAME_DATA_URL = "https://pokemondb.net/pokedex/national";
   static final String POKEMON_DATA_URL = "https://pokemondb.net/pokedex/";
 

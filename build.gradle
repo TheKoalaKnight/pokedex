@@ -9,6 +9,7 @@ targetCompatibility = 1.9
 
 dependencies {
   compile "org.jsoup:jsoup:1.11.3"
+  compile "org.json:json:20180813"
 }
 
 jar {
