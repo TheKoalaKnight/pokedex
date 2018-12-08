@@ -1,17 +1,19 @@
 package pokedex;
 
 class Pokemon {
-  String name;
+  public String name;
+  public int id;
+  public float height;
+  public float weight;
+  public String species;
   // String bio;
-  int id;
-  float height;
-  float weight;
 
-  Pokemon(String name, int id, float height, float weight) {
+  public Pokemon(String name, int id, float height, float weight, String species) {
     this.name = name;
     this.id = id;
     this.height = height;
     this.weight = weight;
+    this.species = species;
   }
 
   String getFormattedName() {

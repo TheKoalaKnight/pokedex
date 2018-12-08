@@ -12,18 +12,19 @@ final public class PokedexAPI {
 
   private PokedexAPI() {}
 
-  static void print(Object object) {
-    System.out.println(object);
-  }
-
   private static Pokemon parseData(String name) throws IOException {
     Document document = Jsoup.connect(POKEMON_DATA_URL + formatName(name)).get();
     
     int id = parseId(document);
     float weight = parseWeight(document);
     float height = parseHeight(document);
+    String species = parseSpecies(document);
 
-    return new Pokemon(name, id, weight, height); // Fix
+    return new Pokemon(name, id, weight, height, species); // Fix
+  }
+
+  private static String parseSpecies(Document document) {
+    return document.selectFirst("th:contains(Species) + td").text();
   }
 
   private static float parseWeight(Document document) {
@@ -53,7 +54,6 @@ final public class PokedexAPI {
     String[] names = new String[elements.size()];
     int i = 0;
     for(Element element : elements) {
-      
       String name = element.selectFirst("span[class='infocard-lg-data text-muted'] > a").text();
       names[i++] = name;
     }
@@ -79,18 +79,9 @@ final public class PokedexAPI {
 
   public static void main(String[] args) {
     try {
-      Pokemon[] pokemons = PokedexAPI.run();
-      print("----------------------------");
-      for(Pokemon pokemon : pokemons) {
-        print("Name: " + pokemon.name);
-        print("Id: " + pokemon.id);
-        print("Weight: " + pokemon.weight);
-        print("Height: " + pokemon.height);
-      }
+      run();
     } catch(IOException e) {
-      print("An IOException occured.");
-      return;
+      System.out.println("Oh");
     }
-    
   }
 }

@@ -11,27 +11,30 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 class Data {
-  static final String DATA_PATH = "data.json";
+  private static final String DATA_PATH = "data.json";
+  private static final String ID_KEY = "id";
+  private static final String NAME_KEY = "name";
+  private static final String WEIGHT_KEY = "weight";
+  private static final String HEIGHT_KEY = "height";
+  private static final String SPECIES_KEY = "species";
+  private static final String ARRAY_KEY = "data";
   private Pokemon[] pokemons;
-  private final String ID_IDENTIFIER = "id";
-  private final String NAME_IDENTIFIER = "name";
-  private final String WEIGHT_IDENTIFIER = "weight";
-  private final String HEIGHT_IDENTIFIER = "height";
 
   Data() {
     pokemons = null;
   }
 
-  JSONObject pokemonToJSON(Pokemon pokemon) {
+  private JSONObject pokemonToJSON(Pokemon pokemon) {
     JSONObject object = new JSONObject();
-    object.put(NAME_IDENTIFIER, pokemon.name);
-    object.put(WEIGHT_IDENTIFIER, pokemon.weight);
-    object.put(HEIGHT_IDENTIFIER, pokemon.height);
-    object.put(ID_IDENTIFIER, pokemon.id);
+    object.put(NAME_KEY, pokemon.name);
+    object.put(WEIGHT_KEY, pokemon.weight);
+    object.put(HEIGHT_KEY, pokemon.height);
+    object.put(ID_KEY, pokemon.id);
+    object.put(SPECIES_KEY, pokemon.species);
     return object;
   }
 
-  String readRawContent() throws IOException {
+  private String readRawContent() throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(DATA_PATH));
     String content = "";
     String line = reader.readLine();
@@ -43,17 +46,18 @@ class Data {
     return content;
   }
 
-  Pokemon pokemonFromJSON(JSONObject object){
-    String name = object.getString(NAME_IDENTIFIER);
-    int id = object.getInt(ID_IDENTIFIER);
-    float weight = object.getFloat(WEIGHT_IDENTIFIER);
-    float height = object.getFloat(HEIGHT_IDENTIFIER);
-    return new Pokemon(name, id, height, weight);
+  private Pokemon pokemonFromJSON(JSONObject object){
+    String name = object.getString(NAME_KEY);
+    int id = object.getInt(ID_KEY);
+    float weight = object.getFloat(WEIGHT_KEY);
+    float height = object.getFloat(HEIGHT_KEY);
+    String species = object.getString(SPECIES_KEY);
+    return new Pokemon(name, id, height, weight, species);
   }
 
-  void readFile() throws IOException {
+  private void readFile() throws IOException {
     String rawContent = readRawContent();
-    JSONArray array =  new JSONObject(rawContent).getJSONArray("data");
+    JSONArray array =  new JSONObject(rawContent).getJSONArray(ARRAY_KEY);
     pokemons = new Pokemon[array.length()];
     for(int i = 0 ; i < array.length() ; i++) {
       JSONObject object = array.getJSONObject(i);
@@ -61,22 +65,26 @@ class Data {
     }
   }
 
-  void writeData() {
+  private JSONObject dataToJSON(){
+    JSONArray array = new JSONArray();
+    for(Pokemon pokemon : pokemons) {
+      array.put(pokemonToJSON(pokemon));
+    }
+    JSONObject object = new JSONObject();
+    object.put(ARRAY_KEY, array);
+    
+    return object;
+  }
+
+  private void writeData() {
     try {
       pokemons = PokedexAPI.run();
     } catch(IOException e) {
       System.out.println("Something went wrong with the API");
       return;
     }
-
-    System.out.println("The data has been gathered, please wait while we write the data to a file");
     
-    JSONArray array = new JSONArray();
-    for(Pokemon pokemon : pokemons) {
-      array.put(pokemonToJSON(pokemon));
-    }
-    JSONObject object = new JSONObject();
-    object.put("data", array);
+    JSONObject object = dataToJSON();
 
     try {
       writeObject(object);
@@ -91,33 +99,28 @@ class Data {
     bufferedWriter.close();
   }
 
-  boolean dataAvailable() {
+  public boolean isDataLoaded() {
+    return pokemons != null;
+  }
+
+  public Pokemon[] getData() throws IOException {
+    if(!dataAvailable()) {
+      writeData();
+    }
+    if(!isDataLoaded()) {
+      readFile();
+    }
+
+    return pokemons;
+  }
+
+  public boolean dataAvailable() {
     File file = new File(DATA_PATH);
     return file.exists() && !file.isDirectory();
   }
 
-  public static void main(String[] args) {
-    Data data = new Data();
-    if(!data.dataAvailable()) {
-      System.out.println("A data file was not available, this might take a few minutes. Please wait.");
-      data.writeData();
-      System.out.println("The file has now been written!");
-    } else {
-      System.out.println("A data file was found!");
-      try {
-        data.readFile();
-      } catch(IOException e) {
-        System.out.println("The file could not be read!");
-        return;
-      }
-    }
-    for(Pokemon pokemon : data.pokemons) {
-      System.out.println("Name: " + pokemon.name);
-      System.out.println("Id: " + pokemon.id);
-      System.out.println("Height: " + pokemon.height);
-      System.out.println("Weight: " + pokemon.weight + "\n");
-    }
+  public void printData() {
+    System.out.println(dataToJSON().getJSONArray(ARRAY_KEY).toString(4));
   }
-
 }
 
