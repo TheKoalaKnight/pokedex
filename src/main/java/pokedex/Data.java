@@ -11,7 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 class Data {
-  private static final String DATA_PATH = "data.json";
+  private static final String RESOURCE_PATH = "resources/";
+  private static final String DATA_PATH = RESOURCE_PATH + "data.json";
   private static final String ID_KEY = "id";
   private static final String NAME_KEY = "name";
   private static final String WEIGHT_KEY = "weight";
@@ -94,6 +95,12 @@ class Data {
   }
 
   private void writeObject(JSONObject object) throws IOException {
+    File resourceDirectory = new File(RESOURCE_PATH);
+    if(!(resourceDirectory.exists() && resourceDirectory.isDirectory() )) {
+      resourceDirectory.mkdir();
+    }
+
+
     BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(DATA_PATH));
     bufferedWriter.write(object.toString());
     bufferedWriter.close();
@@ -110,6 +117,8 @@ class Data {
     if(!isDataLoaded()) {
       readFile();
     }
+
+
 
     return pokemons;
   }

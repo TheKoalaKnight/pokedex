@@ -6,7 +6,6 @@ class Pokemon {
   public float height;
   public float weight;
   public String species;
-  // String bio;
 
   public Pokemon(String name, int id, float height, float weight, String species) {
     this.name = name;

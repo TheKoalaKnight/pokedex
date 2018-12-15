@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 final public class PokedexAPI {
   static final String NAME_DATA_URL = "https://pokemondb.net/pokedex/national";
   static final String POKEMON_DATA_URL = "https://pokemondb.net/pokedex/";
+  static final int NUMBER_OF_POKEMON = 649;
 
   private PokedexAPI() {}
 
@@ -51,11 +52,15 @@ final public class PokedexAPI {
   }
 
   private static String[] parseNames(Elements elements) {
-    String[] names = new String[elements.size()];
+    // String[] names = new String[elements.size()];
+    String[] names = new String[NUMBER_OF_POKEMON];
     int i = 0;
     for(Element element : elements) {
       String name = element.selectFirst("span[class='infocard-lg-data text-muted'] > a").text();
       names[i++] = name;
+      if(i >= NUMBER_OF_POKEMON) {
+        break;
+      }
     }
     return names;
   }
@@ -69,7 +74,7 @@ final public class PokedexAPI {
     
     Elements infoCards = getPokemonElements(document);
     String[] names = parseNames(infoCards);
-    Pokemon[] pokemons = new Pokemon[infoCards.size()];
+    Pokemon[] pokemons = new Pokemon[names.length];
     int i = 0;
     for(String name : names) {
       pokemons[i++] = parseData(name);
@@ -77,11 +82,5 @@ final public class PokedexAPI {
     return pokemons;
   }
 
-  public static void main(String[] args) {
-    try {
-      run();
-    } catch(IOException e) {
-      System.out.println("Oh");
-    }
-  }
+  public static void main(String[] args) {}
 }
