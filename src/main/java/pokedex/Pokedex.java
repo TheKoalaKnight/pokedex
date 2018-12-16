@@ -35,6 +35,8 @@ class InfoWindow {
     height =  scale * 11;
   }
 
+  // TODO: Draw pokemon type
+
   void drawText(int x, int y, Graphics2D graphics) {
     String id = String.format("%03d", pokemon.id);
     graphics.drawString(id, x + (int)(scale * 0.5) , y + (int)(scale * 1.5));
@@ -63,9 +65,6 @@ class InfoWindow {
 
     graphics.setColor(HEADER_BACKGROUND_COLOR);
     graphics.fillRect(x, y, width, scale * 2);
-
-    // graphics.fillRect(x + scale / 2, y + (int)(scale * 8.4), width - scale, scale / 3);
-    // graphics.fillRect(x + scale / 2, y + (int)(scale * 9.4), width - scale, scale / 3);
 
     graphics.setColor(TEXT_SHADOW_COLOR);
     drawText(x + 2, y + 2, graphics);
@@ -96,6 +95,8 @@ public class Pokedex extends DrawableScreen {
     Data data = new Data();
     currentID = 1;
 
+    addKeyListener(new PokedexKeylistener(this));
+
     if(!data.dataAvailable()) {
       System.out.println("Before continuing, we will have to gather the data from our database. This might take a few minutes!");
     }
@@ -124,6 +125,36 @@ public class Pokedex extends DrawableScreen {
     InfoWindow infoWindow = new InfoWindow(getCurrentPokemon(), scale);
     infoWindow.draw(scale * 15, (int)(scale * 1.5), graphics);
     drawPokemonImage(graphics);
+  }
+
+  void setNextPokemon() {
+    if(currentID >= pokemons.length) {
+      return;
+    }
+
+    currentID++;
+    Image oldImage = image;
+    try {
+      image = getCurrentImage();
+    } catch(IOException e) {
+      System.err.println("For some reason, we couldn't get the image. Please check your internet connection!");
+      image = oldImage;
+    }
+  }
+
+  void setPreviousPokemon() {
+    if(currentID <= 1) {
+      return;
+    }
+
+    currentID--;
+    Image oldImage = image;
+    try {
+      image = getCurrentImage();
+    } catch(IOException e) {
+      System.err.println("For some reason, we couldn't get the image. Please check your internet connection!");
+      image = oldImage;
+    }
   }
 
   Image getCurrentImage() throws IOException {

@@ -118,8 +118,6 @@ class Data {
       readFile();
     }
 
-
-
     return pokemons;
   }
 
