@@ -130,4 +130,3 @@ class Data {
     System.out.println(dataToJSON().getJSONArray(ARRAY_KEY).toString(4));
   }
 }
-

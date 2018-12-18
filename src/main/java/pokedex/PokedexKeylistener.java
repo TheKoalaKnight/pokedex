@@ -28,5 +28,4 @@ class PokedexKeylistener implements KeyListener {
   public void keyReleased(KeyEvent event) {
     
   }
-} 
-
+}

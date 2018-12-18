@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -12,71 +13,48 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.text.DecimalFormat;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import screen.DrawableScreen;
 
-class InfoWindow {
-  private static final Color BACKGROUND_COLOR = Color.WHITE;
-  private static final Color HEADER_BACKGROUND_COLOR = new Color(230, 230, 230);
-  static final Color TEXT_COLOR = new Color(100, 100, 100);
-  static final Color TEXT_SHADOW_COLOR = new Color(200, 200, 200);
+class BioWindow {
+  private static final Color BACKGROUND_COLOR = new Color(55, 55, 55);
+  private static final Color TEXT_COLOR = new Color(255, 255, 255);
   Pokemon pokemon;
+  int scale;
   int width;
   int height;
-  int scale;
+  Font font;
 
-  InfoWindow(Pokemon pokemon, int scale) {
-    this.scale = scale;
+  BioWindow(Pokemon pokemon, int scale, Font font) {
     this.pokemon = pokemon;
-    width = scale * 15;
-    height =  scale * 11;
+    this.scale = scale;
+    width = 32 * scale;
+    height = 5 * scale;
+    this.font = font;
   }
-
-  // TODO: Draw pokemon type
-
-  void drawText(int x, int y, Graphics2D graphics) {
-    String id = String.format("%03d", pokemon.id);
-    graphics.drawString(id, x + (int)(scale * 0.5) , y + (int)(scale * 1.5));
-
-    String name = pokemon.name;
-    graphics.drawString(name, x + 5 * scale, y + (int)(scale * 1.5));
-
-    String species = pokemon.species;
-    graphics.drawString(species, x + 3 * scale, y + scale * 4);
-
-    DecimalFormat format = new DecimalFormat("#.##");
-
-    String height = format.format(pokemon.height) +  " m";
-    graphics.drawString("HT", x + 3 * scale, y + scale * 9);
-    graphics.drawString(height, x + (int)(10 * scale), y + scale * 9);
-    
-    String weight = format.format(pokemon.weight) + " kg";
-    graphics.drawString("WT", x + 3 * scale, y + scale * 10);
-    graphics.drawString(weight, x + 10 * scale, y + scale * 10);
-  }
-  
 
   public void draw(int x, int y, Graphics2D graphics) {
     graphics.setColor(BACKGROUND_COLOR);
     graphics.fillRect(x, y, width, height);
 
-    graphics.setColor(HEADER_BACKGROUND_COLOR);
-    graphics.fillRect(x, y, width, scale * 2);
-
-    graphics.setColor(TEXT_SHADOW_COLOR);
-    drawText(x + 2, y + 2, graphics);
+    FontMetrics fontMetrics = graphics.getFontMetrics(font);
+    List<String> strings = StringUtils.wrap(pokemon.bio, fontMetrics, width - 2 * scale);
+  
     graphics.setColor(TEXT_COLOR);
-    drawText(x, y, graphics);
+    for(int i = 0 ; i < strings.size() ; i++) {
+      graphics.drawString((String)strings.get(i), x + scale, y + (int)(1.5 * scale) + fontMetrics.getHeight() * i);
+    }
   }
 }
 
 public class Pokedex extends DrawableScreen {
   private static final String WINDOW_TITLE = "Pok\u00E9dex";
-  private static final String FONT_PATH = "PressStart2P-Regular.ttf";
+  private static final String FONT_PATH = "pokemon-b-w.ttf";
   private static final String IMAGE_URL_TEMPLATE = "https://img.pokemondb.net/sprites/black-white/normal/%s.png";
+  private static final String MISSING_IMAGE_PATH = "unknownSprite.png";
   private static final int WINDOW_WIDTH = 800;
   private static final Color BACKGROUND_RED = new Color(205, 0, 0);
   private static final Color BACKGROUND_LINE_RED = new Color(125, 0, 0);
@@ -87,6 +65,10 @@ public class Pokedex extends DrawableScreen {
   private Pokemon[] pokemons;
   private int currentID;
   private Image image;
+  private Image missingImage;
+
+  // TODO: Draw bottom bar
+  // TODO: Draw string if image is missing
 
   @Override
   protected void setState() {
@@ -102,8 +84,9 @@ public class Pokedex extends DrawableScreen {
     }
     try {
       pokemons = data.getData();
-      font = Font.createFont(Font.TRUETYPE_FONT, new File(FONT_PATH)).deriveFont(20.0f);
+      font = Font.createFont(Font.TRUETYPE_FONT, new File(FONT_PATH)).deriveFont(scale * 1.6f);
       image = getCurrentImage();
+      missingImage = loadMissingImage();
     } catch(IOException e) {
       System.out.println("An error occured during the gathering of data. Please restart the program!");
       return;
@@ -125,6 +108,8 @@ public class Pokedex extends DrawableScreen {
     InfoWindow infoWindow = new InfoWindow(getCurrentPokemon(), scale);
     infoWindow.draw(scale * 15, (int)(scale * 1.5), graphics);
     drawPokemonImage(graphics);
+    BioWindow bioWindow = new BioWindow(getCurrentPokemon(), scale, font);
+    bioWindow.draw(0, (int)(scale * 13.2), graphics);
   }
 
   void setNextPokemon() {
@@ -133,12 +118,11 @@ public class Pokedex extends DrawableScreen {
     }
 
     currentID++;
-    Image oldImage = image;
     try {
       image = getCurrentImage();
     } catch(IOException e) {
       System.err.println("For some reason, we couldn't get the image. Please check your internet connection!");
-      image = oldImage;
+      image = missingImage;
     }
   }
 
@@ -148,13 +132,17 @@ public class Pokedex extends DrawableScreen {
     }
 
     currentID--;
-    Image oldImage = image;
     try {
       image = getCurrentImage();
     } catch(IOException e) {
       System.err.println("For some reason, we couldn't get the image. Please check your internet connection!");
-      image = oldImage;
+      image = missingImage;
     }
+  }
+
+  Image loadMissingImage() throws IOException {
+    BufferedImage img = ImageIO.read(new File(MISSING_IMAGE_PATH)); // "https://img.pokemondb.net/sprites/black-white/normal/" + getCurrentPokemon().getFormattedName().toLowerCase() + ".png"
+    return img.getScaledInstance(8 * scale, 8 * scale, Image.SCALE_DEFAULT);
   }
 
   Image getCurrentImage() throws IOException {

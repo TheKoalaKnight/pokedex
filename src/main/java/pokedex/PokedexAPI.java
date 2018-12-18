@@ -20,12 +20,21 @@ final public class PokedexAPI {
     float weight = parseWeight(document);
     float height = parseHeight(document);
     String species = parseSpecies(document);
+    String bio = parseBio(document);
 
     return new Pokemon(name, id, weight, height, species); // Fix
   }
 
   private static String parseSpecies(Document document) {
     return document.selectFirst("th:contains(Species) + td").text();
+  }
+
+  private static String parseBio(Document document) {
+    Element bioDiv = document.selectFirst("div.resp-scroll");
+
+    System.out.println(bioDiv.text());
+
+    return "";
   }
 
   private static float parseWeight(Document document) {
@@ -52,7 +61,6 @@ final public class PokedexAPI {
   }
 
   private static String[] parseNames(Elements elements) {
-    // String[] names = new String[elements.size()];
     String[] names = new String[NUMBER_OF_POKEMON];
     int i = 0;
     for(Element element : elements) {
@@ -81,6 +89,4 @@ final public class PokedexAPI {
     }
     return pokemons;
   }
-
-  public static void main(String[] args) {}
 }
