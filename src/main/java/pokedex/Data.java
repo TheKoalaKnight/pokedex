@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,7 +19,10 @@ class Data {
   private static final String WEIGHT_KEY = "weight";
   private static final String HEIGHT_KEY = "height";
   private static final String SPECIES_KEY = "species";
+  private static final String BIO_KEY = "bio";
+  private static final String TYPES_KEY = "types";
   private static final String ARRAY_KEY = "data";
+  private static final List<String> UNPERMITTED_TYPES = List.of("Fairy"); 
   private Pokemon[] pokemons;
 
   Data() {
@@ -32,6 +36,8 @@ class Data {
     object.put(HEIGHT_KEY, pokemon.height);
     object.put(ID_KEY, pokemon.id);
     object.put(SPECIES_KEY, pokemon.species);
+    object.put(BIO_KEY, pokemon.bio);
+    object.put(TYPES_KEY, new JSONArray(pokemon.types));
     return object;
   }
 
@@ -47,13 +53,39 @@ class Data {
     return content;
   }
 
+  private String[] parseTypes(JSONObject object) {
+    JSONArray typeArray = object.getJSONArray(TYPES_KEY);
+    int numberOfPermittedTypes = 0;
+    for(int i = 0 ; i < typeArray.length() ; i++) {
+      if(!UNPERMITTED_TYPES.contains(typeArray.getString(i))) {
+        numberOfPermittedTypes++;
+      }
+    }
+
+    String types[] = new String[numberOfPermittedTypes];
+
+    int i = 0;
+    for(Object arrayObject : typeArray) {
+      String type = (String)arrayObject;
+      if(UNPERMITTED_TYPES.contains(type)) {
+        continue;
+      }
+
+      types[i++] = type;
+    }
+    
+    return types;
+  }
+
   private Pokemon pokemonFromJSON(JSONObject object){
     String name = object.getString(NAME_KEY);
     int id = object.getInt(ID_KEY);
     float weight = object.getFloat(WEIGHT_KEY);
     float height = object.getFloat(HEIGHT_KEY);
     String species = object.getString(SPECIES_KEY);
-    return new Pokemon(name, id, height, weight, species);
+    String bio = object.getString(BIO_KEY);
+    String[] types = parseTypes(object);
+    return new Pokemon(name, id, height, weight, species, bio, types);
   }
 
   private void readFile() throws IOException {

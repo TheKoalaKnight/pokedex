@@ -15,26 +15,32 @@ final public class PokedexAPI {
 
   private static Pokemon parseData(String name) throws IOException {
     Document document = Jsoup.connect(POKEMON_DATA_URL + formatName(name)).get();
-    
+
     int id = parseId(document);
     float weight = parseWeight(document);
     float height = parseHeight(document);
     String species = parseSpecies(document);
     String bio = parseBio(document);
+    String[] types = parseTypes(document);
 
-    return new Pokemon(name, id, weight, height, species); // Fix
+    return new Pokemon(name, id, weight, height, species, bio, types); // Fix
   }
 
   private static String parseSpecies(Document document) {
     return document.selectFirst("th:contains(Species) + td").text();
   }
 
+  private static String[] parseTypes(Document document) {
+    String types =  document.selectFirst("th:contains(Type) + td").text();
+    return types.split(" ");
+  }
+
   private static String parseBio(Document document) {
-    Element bioDiv = document.selectFirst("div.resp-scroll");
+    Element bioDiv = document.selectFirst("h2:contains(entries) ~ div.resp-scroll");
 
-    System.out.println(bioDiv.text());
+    Element blackBio = bioDiv.selectFirst("th:contains(Black) + td");
 
-    return "";
+    return blackBio.text();
   }
 
   private static float parseWeight(Document document) {
@@ -88,5 +94,9 @@ final public class PokedexAPI {
       pokemons[i++] = parseData(name);
     }
     return pokemons;
+  }
+
+  public static void main(String[] args) throws IOException {
+    run();
   }
 }

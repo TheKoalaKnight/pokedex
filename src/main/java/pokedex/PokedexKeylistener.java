@@ -12,9 +12,9 @@ class PokedexKeylistener implements KeyListener {
 
   @Override
   public void keyPressed(KeyEvent event) {
-    if(event.getKeyCode() == KeyEvent.VK_LEFT) {
+    if(event.getKeyCode() == KeyEvent.VK_DOWN) {
       pokedex.setPreviousPokemon();
-    } else if(event.getKeyCode() == KeyEvent.VK_RIGHT){
+    } else if(event.getKeyCode() == KeyEvent.VK_UP){
       pokedex.setNextPokemon();
     }
   }

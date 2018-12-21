@@ -4,7 +4,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -13,52 +12,23 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import screen.DrawableScreen;
 
-class BioWindow {
-  private static final Color BACKGROUND_COLOR = new Color(55, 55, 55);
-  private static final Color TEXT_COLOR = new Color(255, 255, 255);
-  Pokemon pokemon;
-  int scale;
-  int width;
-  int height;
-  Font font;
-
-  BioWindow(Pokemon pokemon, int scale, Font font) {
-    this.pokemon = pokemon;
-    this.scale = scale;
-    width = 32 * scale;
-    height = 5 * scale;
-    this.font = font;
-  }
-
-  public void draw(int x, int y, Graphics2D graphics) {
-    graphics.setColor(BACKGROUND_COLOR);
-    graphics.fillRect(x, y, width, height);
-
-    FontMetrics fontMetrics = graphics.getFontMetrics(font);
-    List<String> strings = StringUtils.wrap(pokemon.bio, fontMetrics, width - 2 * scale);
-  
-    graphics.setColor(TEXT_COLOR);
-    for(int i = 0 ; i < strings.size() ; i++) {
-      graphics.drawString((String)strings.get(i), x + scale, y + (int)(1.5 * scale) + fontMetrics.getHeight() * i);
-    }
-  }
-}
 
 public class Pokedex extends DrawableScreen {
   private static final String WINDOW_TITLE = "Pok\u00E9dex";
-  private static final String FONT_PATH = "pokemon-b-w.ttf";
+  private static final String RESOURCE_DIR = "resources/";
+  private static final String FONT_PATH = RESOURCE_DIR + "pokemon-b-w.ttf";
   private static final String IMAGE_URL_TEMPLATE = "https://img.pokemondb.net/sprites/black-white/normal/%s.png";
-  private static final String MISSING_IMAGE_PATH = "unknownSprite.png";
-  private static final int WINDOW_WIDTH = 800;
+  private static final String MISSING_IMAGE_PATH = RESOURCE_DIR + "unknownSprite.png";
   private static final Color BACKGROUND_RED = new Color(205, 0, 0);
   private static final Color BACKGROUND_LINE_RED = new Color(125, 0, 0);
   private static final Color BACKGROUND_GREY = new Color(150, 150, 150);
+  public static final int WINDOW_WIDTH = 800;
+  public static final int WIDTH_SCALE_RATIO = 32;
   private int scale;
   private int strokeThickness;
   private Font font;
@@ -66,18 +36,17 @@ public class Pokedex extends DrawableScreen {
   private int currentID;
   private Image image;
   private Image missingImage;
-
-  // TODO: Draw bottom bar
-  // TODO: Draw string if image is missing
+  DrawableSubWindow[] subWindows;
 
   @Override
   protected void setState() {
-    scale = width / 32;
+    scale = (int)(width / WIDTH_SCALE_RATIO);
     strokeThickness = width / 400;
     Data data = new Data();
     currentID = 1;
 
     addKeyListener(new PokedexKeylistener(this));
+    addMouseListener(new PokedexMouseListener(this));
 
     if(!data.dataAvailable()) {
       System.out.println("Before continuing, we will have to gather the data from our database. This might take a few minutes!");
@@ -94,7 +63,13 @@ public class Pokedex extends DrawableScreen {
       System.out.println("An error occured while loading the font. Please check the integrity of the font file.");
       return;
     }
-    System.out.println("Done!");
+    
+
+    InfoWindow infoWindow = new InfoWindow(scale * 15, (int)(scale * 1.5), scale, font);
+    BioWindow bioWindow = new BioWindow(0, (int)(scale * 13.0), scale, font);
+    BottomBar bottomBar = new BottomBar(0, height - scale * 2, scale);
+
+    subWindows = new DrawableSubWindow[] { infoWindow, bioWindow, bottomBar };
   }
 
   @Override
@@ -103,13 +78,14 @@ public class Pokedex extends DrawableScreen {
   @Override
   protected void drawFrame(Graphics g) {
     Graphics2D graphics = (Graphics2D) g;
+    
+
     graphics.setFont(font);
-    drawBackground(graphics); 
-    InfoWindow infoWindow = new InfoWindow(getCurrentPokemon(), scale);
-    infoWindow.draw(scale * 15, (int)(scale * 1.5), graphics);
+    drawBackground(graphics);
     drawPokemonImage(graphics);
-    BioWindow bioWindow = new BioWindow(getCurrentPokemon(), scale, font);
-    bioWindow.draw(0, (int)(scale * 13.2), graphics);
+    for(DrawableSubWindow subWindow : subWindows) {
+      subWindow.draw(getCurrentPokemon(), graphics);
+    }
   }
 
   void setNextPokemon() {
